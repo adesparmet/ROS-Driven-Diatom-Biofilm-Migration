@@ -13,15 +13,15 @@ library(tidyr)
 library(dplyr)
 #install.packages("gt")
 library(gt)
-#install.packages("here")
-library(here)
+#install.packages("base")
+library(base)
 
 # Import RLC data ####
-txt_content_HL <- readLines(here("data", "Photophysiology_data", "Photosynthetic_parameters", "20240501_HL.txt"), warn = FALSE)
+txt_content_HL <- readLines("1_Data_formatting/data/Photophysiology_data/Photosynthetic_parameters/20240501_HL.txt", warn = FALSE) #Set data path
 
-txt_content_PL <- readLines(here("data", "Photophysiology_data", "Photosynthetic_parameters", "20240502_PL.txt"), warn = FALSE)
+txt_content_PL <- readLines("1_Data_formatting/data/Photophysiology_data/Photosynthetic_parameters/20240502_PL.txt", warn = FALSE)
 
-txt_content_HP <- readLines(here("data", "Photophysiology_data", "Photosynthetic_parameters", "20240503_HP.txt"), warn = FALSE)
+txt_content_HP <- readLines("1_Data_formatting/data/Photophysiology_data/Photosynthetic_parameters/20240503_HP.txt", warn = FALSE)
 
 # Merge raw data files
 txt_content_HL <- txt_content_HL[txt_content_HL != "]"]
@@ -43,7 +43,7 @@ colonnes_numeriques <- sapply(df_transposed, is.numeric)
 df_transposed[, colonnes_numeriques] <- lapply(df_transposed[, colonnes_numeriques], function(x) gsub(",", ".", x))
 
 # Add metadata
-metadata_photophy <- read.csv(here("data", "Photophysiology_data", "Photosynthetic_parameters", "metadata_photophy.csv"), header = TRUE, sep = ";") # metadata file
+metadata_photophy<-read.csv("1_Data_formatting/data/Photophysiology_data/Photosynthetic_parameters/metadata_photophy.csv",h=T,sep=";") # Set the path of your metadata file
 
 # Merge metadata and df_transposed
 lc.data <- merge(df_transposed, metadata_photophy, by = "row.names", all = TRUE)
@@ -52,35 +52,42 @@ lc.data[, 1:24] <- lapply(lc.data[, 1:24], as.numeric)
 
 # rETR calculation ####
 
-PSII<-data.frame(`Fq_Fm`=(lc.data[,2]-lc.data[,1])/lc.data[,2])
+PSII <- data.frame(
+  No = lc.data$No,
+  Fq_Fm = (lc.data[,2] - lc.data[,1]) / lc.data[,2])
 
 for( i in 1:7){
-  PSII[,i+1]<-(lc.data[,i+2]-lc.data[,i+9])/lc.data[,i+2] 
+  PSII[,i+2]<-(lc.data[,i+2]-lc.data[,i+9])/lc.data[,i+2] 
 } #PSII efficiency calculation
 
 lights<-c(10,20,50,100,300,500,1000) # RLC program light steps
 
-rETR<-t(t(PSII)*c(0,lights)*0.5) # rETR calculation, *0.5 assuming 50/50 photons distribution between PSI/PSII
-colnames(rETR)<-c("rETR 0",paste("rETR",1:7))
+rETR <- t(t(PSII[, -1]) * c(0, lights) * 0.5)# rETR calculation, *0.5 assuming 50/50 photons distribution between PSI/PSII
+
+rETR <- data.frame(
+  No = PSII$No,
+  rETR)
+
+colnames(rETR) <- c("No", paste0("rETR_l", c(0, 1:7)))
 rETR<-data.frame(rETR) # df creation
 
 # Retrieve rETRm_obs
-rETR$`rETRm obs` <- apply(rETR[, 1:8], 1, max, na.rm = TRUE) # Retrieve rETRm observed
-all(apply(rETR[, c(8,9)], 1, function(x) x[1] == x[2])) # All rETRm obs at 1000 PPFD?
+rETR$`rETRm obs` <- apply(rETR[, 2:9], 1, max, na.rm = TRUE) # Retrieve rETRm observed
+all(apply(rETR[, c(9,10)], 1, function(x) x[1] == x[2])) # All rETRm obs at 1000 PPFD?
 
 # Photosynthetic parameters calculation (Eilers&Peeters) ####
 
-source(here("data", "Photophysiology_data", "modele_non_lineaire_Eilers&Peeters.R")) #Eilers&Peeters script source
+source("1_Data_formatting/data/Photophysiology_data/modele_non_lineaire_Eilers&Peeters.R") #Eilers&Peeters script source
 
 # Model calculation
 res <- list()
 for(i in 1:nrow(rETR)){  
-  res[[i]] = fit_ep(light = c(0, lights), as.numeric(rETR[i, 1:8]))  
+  res[[i]] = fit_ep(light = c(0, lights), as.numeric(rETR[i, 2:9]))  
 }
 
 df_Pparameters<-do.call("rbind", res) # df creation
 df_Pparameters$F0<-lc.data$fo # Add F0 values
-df_Pparameters$"Fq'/Fm' VLL"<-lc.data$qy_max # Add Fq'/Fm' values
+df_Pparameters$"Fq'/Fm' max"<-lc.data$qy_max # Add Fq'/Fm' values
 df_Pparameters$Name<-lc.data$Name # Add metadata
 df_Pparameters$No<-lc.data$No
 df_Pparameters$Time<-lc.data$Time
@@ -90,13 +97,10 @@ df_Pparameters$Treatment<-lc.data$Treatment
 df_Pparameters <- df_Pparameters %>%rename(rETRm_model = rETRm)
 df_Pparameters <- df_Pparameters %>%rename("F0" = F0)
 
-df_Pparameters <- df_Pparameters %>%
-  mutate(`F0` = ifelse(grepl("^WSB_", Treatment), NA, `F0`)) #Useless values because no migration
-
 # Add "Day" variable metadata
-df_Pparameters$Day <- ifelse(grepl("_HL_|_VLL_1|_VLL_2|_VLL_3", df_Pparameters$Name), 1, 
-                      ifelse(grepl("_PL_|_VLL_4|_VLL_5|_VLL_6", df_Pparameters$Name), 2, 
-                     ifelse(grepl("_HP_|_VLL_7|_VLL_8|_VLL_9", df_Pparameters$Name), 3, NA)))
+df_Pparameters$Day <- ifelse(grepl("_HL_|_DA_1|_DA_2|_DA_3", df_Pparameters$Name), 1, 
+                      ifelse(grepl("_PL_|_DA_4|_DA_5|_DA_6", df_Pparameters$Name), 2, 
+                     ifelse(grepl("_HP_|_DA_7|_DA_8|_DA_9", df_Pparameters$Name), 3, NA)))
 
 # NPQ, YNPQ, YNO calculations ####
 

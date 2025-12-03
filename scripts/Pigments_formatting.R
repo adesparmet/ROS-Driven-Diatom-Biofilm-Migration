@@ -7,12 +7,12 @@ library(stringr)
 library(dplyr)
 #install.packages("tidyr")
 library(tidyr)
-#install.packages("here")
-library(here)
+#install.packages("readr")
+library(readr)
 
 # Data import ####
 
-path <- here("data", "Pigments_data", "Chromato_integration")
+path <-"1_Data_formatting/data/Pigments_data/Chromato_integration" #Set data path
 
 files <- list.files(path, pattern = "\\.txt$", full.names = TRUE, recursive = TRUE) # .txt file list
 data_list <- list() # Create new list
@@ -33,7 +33,7 @@ for (file in files) {
 
 df_combined_pig <- bind_rows(data_list) # Combined into one df
 
-# Pigment identifiChlation ####
+# Pigment identification ####
 
 #412nm
 df_combined_pig <- df_combined_pig %>%
@@ -71,23 +71,23 @@ df_combined_pig <- df_combined_pig %>%
 
 #448
 df_combined_pig <- df_combined_pig %>%
-  mutate(Peak = ifelse(Peak == 1 & grepl("^448", File), "Fl1", Peak))
+  mutate(Peak = ifelse(Peak == 1 & grepl("^448", File), "F-l1", Peak))
 df_combined_pig <- df_combined_pig %>%
   mutate(Peak = ifelse(Peak == 2 & grepl("^448", File), "F", Peak))
 df_combined_pig <- df_combined_pig %>%
-  mutate(Peak = ifelse(Peak == 3 & grepl("^448", File), "Fl2", Peak))
+  mutate(Peak = ifelse(Peak == 3 & grepl("^448", File), "F-l2", Peak))
 df_combined_pig <- df_combined_pig %>%
-  mutate(Peak = ifelse(Peak == 4 & grepl("^448", File), "Fl3", Peak))
+  mutate(Peak = ifelse(Peak == 4 & grepl("^448", File), "F-l3", Peak))
 df_combined_pig <- df_combined_pig %>%
-  mutate(Peak = ifelse(Peak == 5 & grepl("^448", File), "Fl4", Peak))
+  mutate(Peak = ifelse(Peak == 5 & grepl("^448", File), "F-l4", Peak))
 df_combined_pig <- df_combined_pig %>%
-  mutate(Peak = ifelse(Peak == 6 & grepl("^448", File), "Fl5", Peak))
+  mutate(Peak = ifelse(Peak == 6 & grepl("^448", File), "F-l5", Peak))
 df_combined_pig <- df_combined_pig %>%
-  mutate(Peak = ifelse(Peak == 7 & grepl("^448", File), "Fl6", Peak))
+  mutate(Peak = ifelse(Peak == 7 & grepl("^448", File), "F-l6", Peak))
 df_combined_pig <- df_combined_pig %>%
   mutate(Peak = ifelse(Peak == 8 & grepl("^448", File), "Dd", Peak))
 df_combined_pig <- df_combined_pig %>%
-  mutate(Peak = ifelse(Peak == 9 & grepl("^448", File), "Fl7", Peak))
+  mutate(Peak = ifelse(Peak == 9 & grepl("^448", File), "F-l7", Peak))
 df_combined_pig <- df_combined_pig %>%
   mutate(Peak = ifelse(Peak == 10 & grepl("^448", File), "A", Peak))
 df_combined_pig <- df_combined_pig %>%
@@ -138,7 +138,7 @@ df_combined_pig <- df_combined_pig %>%
   mutate(Peak = ifelse(Peak == 7 & grepl("^663", File), "Pya", Peak))
 # Coefficient standard pigment director ####
 
-# Chla-libration curve of DHI standard pigments (Suppl MM)
+# Calibration curve of DHI standard pigments (Suppl Materials and Methods)
 coeff_Chla412<-6809.6001 #Chla at 412nm
 coeff_Chla431<-8393.2274 #Chla at 431nm
 coeff_Chla663<-7043.3959 #Chla at 663nm
@@ -146,7 +146,7 @@ coeff_L<-17820.4549 #Lutein at 448nm
 coeff_Chlc2<- 28129.7705 #Chlc2 at 446nm
 coeff_V<- 13113.8819 #Violaxanthin at 441nm
 coeff_F<-12985.4446 #Fucoxanthin at 448nm
-coeff_B<-19562.5542 #Beta-Chlarotene at 454nm
+coeff_B<-19562.5542 #Beta-carotene at 454nm
 coeff_Dt<-21162.9569 #Diatoxanthin at 454nm
 coeff_Dd<-17697.5559 #Diadinoxanthin at 448nm
 
@@ -169,13 +169,13 @@ df_combined_pig[df_combined_pig$Peak == "βε", "µg"] <- df_combined_pig[df_com
 df_combined_pig[df_combined_pig$Peak == "ββ", "µg"] <- df_combined_pig[df_combined_pig$Peak == "ββ", "Area"]/ coeff_B
 df_combined_pig[df_combined_pig$Peak == "Pya", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Pya", "Area"]/ coeff_Chla663
 
-df_combined_pig[df_combined_pig$Peak == "Fl1", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Fl1", "Area"]/coeff_F
-df_combined_pig[df_combined_pig$Peak == "Fl2", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Fl2", "Area"]/coeff_F
-df_combined_pig[df_combined_pig$Peak == "Fl3", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Fl3", "Area"]/ coeff_F
-df_combined_pig[df_combined_pig$Peak == "Fl4", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Fl4", "Area"]/ coeff_F
-df_combined_pig[df_combined_pig$Peak == "Fl5", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Fl5", "Area"]/ coeff_F
-df_combined_pig[df_combined_pig$Peak == "Fl6", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Fl6", "Area"]/ coeff_F
-df_combined_pig[df_combined_pig$Peak == "Fl7", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Fl7", "Area"]/ coeff_F
+df_combined_pig[df_combined_pig$Peak == "F-l1", "µg"] <- df_combined_pig[df_combined_pig$Peak == "F-l1", "Area"]/coeff_F
+df_combined_pig[df_combined_pig$Peak == "F-l2", "µg"] <- df_combined_pig[df_combined_pig$Peak == "F-l2", "Area"]/coeff_F
+df_combined_pig[df_combined_pig$Peak == "F-l3", "µg"] <- df_combined_pig[df_combined_pig$Peak == "F-l3", "Area"]/ coeff_F
+df_combined_pig[df_combined_pig$Peak == "F-l4", "µg"] <- df_combined_pig[df_combined_pig$Peak == "F-l4", "Area"]/ coeff_F
+df_combined_pig[df_combined_pig$Peak == "F-l5", "µg"] <- df_combined_pig[df_combined_pig$Peak == "F-l5", "Area"]/ coeff_F
+df_combined_pig[df_combined_pig$Peak == "F-l6", "µg"] <- df_combined_pig[df_combined_pig$Peak == "F-l6", "Area"]/ coeff_F
+df_combined_pig[df_combined_pig$Peak == "F-l7", "µg"] <- df_combined_pig[df_combined_pig$Peak == "F-l7", "Area"]/ coeff_F
 
 df_combined_pig[df_combined_pig$Peak == "Uc1", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Uc1", "Area"]/ coeff_F
 df_combined_pig[df_combined_pig$Peak == "Uc2", "µg"] <- df_combined_pig[df_combined_pig$Peak == "Uc2", "Area"]/ coeff_F
@@ -209,16 +209,16 @@ df_combined_pig[df_combined_pig$Peak == "Phal2", "µg"] <- df_combined_pig[df_co
 
 #Calculation of pigment weight in the extraction volume (2ml methanol)
 df_combined_pig <- df_combined_pig %>%mutate(w2ml = NA)
-df_combined_pig$w2ml <- ((df_combined_pig$µg * 10)*2) # x10 beChlause the injection volume method was 100 µl and multiplied by 2 beChlause the final volume was = 2ml meoh
+df_combined_pig$w2ml <- ((df_combined_pig$µg * 10)*2) # x10 because the injection volume method was 100 µl and multiplied by 2 because the final volume was = 2ml meoh
 
 #Standardization per gram of dry matter
 df_combined_pig <- df_combined_pig %>%mutate(µg.sed = NA)
 
-VLL_WSB_1<-	0.0103 #Weighed dry matter (gr)
-VLL_WSB_2<-	0.0118
-VLL_WSB_3<-	0.0117
-VLL_WSB_4<-	0.0113
-VLL_WSB_5<-	0.0112
+DA_WSB_1<-	0.0103 #Weighed dry matter (gr)
+DA_WSB_2<-	0.0118
+DA_WSB_3<-	0.0117
+DA_WSB_4<-	0.0113
+DA_WSB_5<-	0.0112
 HL_WSB_1<-	0.0111
 HL_WSB_2<-	0.0116
 HL_WSB_3<-	0.0108
@@ -234,11 +234,11 @@ HP_WSB_2<-	0.0113
 HP_WSB_3<-	0.0114
 HP_WSB_4<-	0.0105
 HP_WSB_5<-	0.0112
-VLL_SB_1<-	0.0406
-VLL_SB_2<-	0.0414
-VLL_SB_3<-	0.0417
-VLL_SB_4<-	0.0399
-VLL_SB_5<-	0.0398
+DA_SB_1<-	0.0406
+DA_SB_2<-	0.0414
+DA_SB_3<-	0.0417
+DA_SB_4<-	0.0399
+DA_SB_5<-	0.0398
 HL_SB_1<-	0.0417
 HL_SB_2<-	0.0410
 HL_SB_3<-	0.0407
@@ -257,16 +257,16 @@ HP_SB_5<-	0.0418
 
 df_combined_pig <- df_combined_pig %>%
   mutate(µg.sed = case_when(
-    grepl("VLL_SB_1", File) ~ w2ml / VLL_SB_1, #Concentrations Calculation
-    grepl("VLL_SB_2", File) ~ w2ml / VLL_SB_2,
-    grepl("VLL_SB_3", File) ~ w2ml / VLL_SB_3,
-    grepl("VLL_SB_4", File) ~ w2ml / VLL_SB_4,
-    grepl("VLL_SB_5", File) ~ w2ml / VLL_SB_5,
-    grepl("VLL_WSB_1", File) ~ w2ml / VLL_WSB_1,
-    grepl("VLL_WSB_2", File) ~ w2ml / VLL_WSB_2,
-    grepl("VLL_WSB_3", File) ~ w2ml / VLL_WSB_3,
-    grepl("VLL_WSB_4", File) ~ w2ml / VLL_WSB_4,
-    grepl("VLL_WSB_5", File) ~ w2ml / VLL_WSB_5,
+    grepl("DA_SB_1", File) ~ w2ml / DA_SB_1, #Concentrations calculation
+    grepl("DA_SB_2", File) ~ w2ml / DA_SB_2,
+    grepl("DA_SB_3", File) ~ w2ml / DA_SB_3,
+    grepl("DA_SB_4", File) ~ w2ml / DA_SB_4,
+    grepl("DA_SB_5", File) ~ w2ml / DA_SB_5,
+    grepl("DA_WSB_1", File) ~ w2ml / DA_WSB_1,
+    grepl("DA_WSB_2", File) ~ w2ml / DA_WSB_2,
+    grepl("DA_WSB_3", File) ~ w2ml / DA_WSB_3,
+    grepl("DA_WSB_4", File) ~ w2ml / DA_WSB_4,
+    grepl("DA_WSB_5", File) ~ w2ml / DA_WSB_5,
     grepl("HP_SB_1", File) ~ w2ml / HP_SB_1,
     grepl("HP_SB_2", File) ~ w2ml / HP_SB_2,
     grepl("HP_SB_3", File) ~ w2ml / HP_SB_3,
@@ -300,7 +300,7 @@ df_combined_pig <- df_combined_pig %>%
     TRUE ~ NA_real_
   ))
 
-# Matrix of pigment concentration per gram of dry sediment
+# Matrix of pigment concentration µg per gram of dry matter
 df_pigment<- df_combined_pig %>%
   mutate(File = str_replace(File, ".*txt_", "")) %>% 
   mutate(File = str_remove(File, "_0524$")) %>%

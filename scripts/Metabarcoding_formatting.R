@@ -1,4 +1,6 @@
 #Library packages ####
+#install.packages("reshape2")
+library(reshape2)
 #install.packages("BiocManager")
 #BiocManager::install("phyloseq", dependencies = TRUE)
 library(phyloseq)
@@ -15,14 +17,11 @@ library(dplyr)
 library(tidyr)
 #install.packages("ape")
 library(ape)
-#install.packages("here")
-library(here)
-
 # Data import ####
 
-phyloseq_16s <- readRDS(here("data", "Metabarcoding_data", "phyloseq_16s.rds"))
+phyloseq_16s <- readRDS("1_Data_formatting/data/Metabarcoding_data/phyloseq_16s.rds")
 
-phyloseq_18s <- readRDS(here("data", "Metabarcoding_data", "phyloseq_18s.rds"))
+phyloseq_18s <- readRDS("1_Data_formatting/data/Metabarcoding_data/phyloseq_18s.rds")
 
 # Taxonomy table 
 taxonomy_biofilm18S <- tax_table(phyloseq_18s)
@@ -41,7 +40,7 @@ taxonomy_biofilm16S[, last_col16] <- paste0(taxonomy_biofilm16S[, last_col16], "
 tax_table(phyloseq_16s) <- taxonomy_biofilm16S
 
 # Sample names otu_table
-name_sample <-c("HL_WSB_3", "HL_WSB_2","HL_WSB_1","HL_WSB_4","HL_WSB_5","VLL_WSB_5","HP_WSB_5","VLL_WSB_2","VLL_WSB_4","VLL_WSB_1","VLL_WSB_3","HP_WSB_3","HL_SB_3","HL_SB_5","HL_SB_2","VLL_SB_2","VLL_SB_1","HL_SB_4","HL_SB_1","VLL_SB_4","VLL_SB_3","VLL_SB_5","PL_WSB_5","PL_WSB_4","PL_WSB_2","PL_WSB_3","HP_WSB_4","HP_WSB_1","PL_WSB_1","HP_WSB_2", "PL_SB_5","PL_SB_4","PL_SB_2","PL_SB_3","PL_SB_1", "HP_SB_3","HP_SB_2","HP_SB_4","HP_SB_5", "HP_SB_1")
+name_sample <-c("HL_WSB_3", "HL_WSB_2","HL_WSB_1","HL_WSB_4","HL_WSB_5","DA_WSB_5","HP_WSB_5","DA_WSB_2","DA_WSB_4","DA_WSB_1","DA_WSB_3","HP_WSB_3","HL_SB_3","HL_SB_5","HL_SB_2","DA_SB_2","DA_SB_1","HL_SB_4","HL_SB_1","DA_SB_4","DA_SB_3","DA_SB_5","PL_WSB_5","PL_WSB_4","PL_WSB_2","PL_WSB_3","HP_WSB_4","HP_WSB_1","PL_WSB_1","HP_WSB_2", "PL_SB_5","PL_SB_4","PL_SB_2","PL_SB_3","PL_SB_1", "HP_SB_3","HP_SB_2","HP_SB_4","HP_SB_5", "HP_SB_1")
 
 sample_names(phyloseq_18s) <- name_sample
 sample_names(phyloseq_16s) <- name_sample
@@ -196,7 +195,7 @@ df_combined16 <- df_combined16[-1, ]
 df_community <- merge(df_combined18, df_combined16, by = "row.names", all = TRUE)
 
 #Add metadata
-df_community <- cbind(Conditions = sub("_.*", "", df_community$Row.names), df_community) #Stress conditions metadata (VLL : Very Low Light Adapted ; HL : High Light ; HP : Hydrogen Peroxide ; PL : Plamsa)
+df_community <- cbind(Conditions = sub("_.*", "", df_community$Row.names), df_community) #Stress conditions metadata (DA : Dark Adapted control; HL : High Light ; HP : Hydrogen Peroxide ; PL : Plamsa)
 df_community <- cbind(Groups = sub("^[^_]+_([^_]+)_.*$", "\\1", df_community$Row.names), df_community) #Mobility metadata (SB : Sediment Biofilm ; WSB : Without Sediment Biofilm)
 names(df_community)[names(df_community) == "Row.names"] <- "File"
 
